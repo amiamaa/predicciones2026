@@ -136,11 +136,15 @@ function actualizarCuentaAtras() {
 setInterval(actualizarCuentaAtras, 1000);
 actualizarCuentaAtras();
 
-// Cargar predicciones desde JSON
+// Cargar predicciones desde JSON y limpiar caracteres raros
 fetch('predicciones.json')
   .then(response => response.json())
   .then(data => {
-      predicciones = data;
+      predicciones = data.map(x => 
+          x.normalize("NFC") // normaliza acentos
+           .replace(/[^\x00-\x7FáéíóúÁÉÍÓÚñÑ.,!?()\/-]/g, "") // elimina caracteres extraños
+           .trim()
+      );
       // Barajar predicciones
       predicciones.sort(() => Math.random() - 0.5);
   })
