@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Predicciones Retro</title>
+<style>
+    body {
+        background-color: #000;
+        color: #0f0;
+        font-family: "Courier New", Courier, monospace;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        min-height: 100vh;
+        margin: 0;
+        text-align: center;
+    }
+
+    input, button, p, #texto {
+        font-family: "Courier New", Courier, monospace;
+        color: #0f0;
+        font-weight: normal;
+        font-size: 20px;
+        background-color: #000;
+        border: 1px solid #0f0;
+        padding: 10px 20px;
+        margin: 10px;
+        cursor: pointer;
+    }
+
+    input::placeholder {
+        color: #0f0;
+        opacity: 0.7;
+    }
+
+    button:hover {
+        background-color: #0f0;
+        color: #000;
+    }
+
+    .pantalla { display: none; }
+
+    #texto {
+        min-height: 60px;
+        margin: 30px 0;
+        white-space: pre-wrap;
+        text-decoration: none;
+        border: none;
+        cursor: default;
+    }
+
+    #cuentaAtras {
+        font-family: "Courier New", Courier, monospace;
+        color: #0f0;
+        font-weight: normal;
+        font-size: 20px;
+        margin-bottom: 20px;
+    }
+
+    p {
+        margin: 5px 0;
+        background: none;
+        border: none;
+        cursor: default;
+    }
+
+    button {
+        font-weight: normal;
+    }
+</style>
+</head>
+<body>
+
+<!-- Pantalla de login -->
+<div id="login" class="pantalla" style="display:block;">
+    <p id="cuentaAtras"></p>
+    <p>Acceso privado</p>
+    <input type="password" id="password" placeholder="Contraseña">
+    <br>
+    <button onclick="entrar()">Entrar</button>
+</div>
+
+<!-- Pantalla de registro -->
+<div id="registro" class="pantalla">
+    <p>Participantes</p>
+    <input id="nombre" placeholder="Nombre">
+    <input id="prediccion" type="number" placeholder="Aciertos esperados">
+    <br>
+    <button onclick="agregar()">Agregar participante</button>
+    <p id="lista"></p>
+    <button onclick="empezar()">Empezar</button>
+</div>
+
+<!-- Pantalla de juego -->
+<div id="juego" class="pantalla">
+    <p id="texto"></p>
+    <button onclick="acertada()">Acierto</button>
+    <button onclick="fallada()">Fallo</button>
+</div>
+
+<!-- Pantalla final -->
+<div id="final" class="pantalla">
+    <p>Resultado final</p>
+    <p id="resultado"></p>
+</div>
+
+<script>
+const CLAVE = "amigos2026";
+
+let participantes = [];
+let predicciones = [
+    "Paula tiene casi novio",
+    "Lucas tiene novio",
+    "Lucas se suicida",
+    "Lucas tiene novio y lo deja Lucas a él",
+    "Volvemos a leer las predicciones en el rocho deja Laura",
+    "Lucas se queda en Lugo",
+    "Irene y Paula lo dejan",
+    "Paula canarias y el novio lo dejan (siguen según Lucas y Adrián)",
+    "Laura y breixo siguen",
+    "Laura y breixo lo dejan según Lucas y yo Paula",
+    "Balu sigue vivo según Lucas y yo digo Paula q está vivo pero tieso",
+    "Lubina aguanta hasta julio",
+    "Adrián se lía con muchos hombres en verano",
+    "Jose se va de Lugo",
+    "Lucas se lía con 24",
+    "Alguien coge una ETS/susto de embarazo",
+    "Salimos por el Cuenca",
+    "Salimos por una ciudad nueva",
+    "Adrián y Deva lo dejan",
+    "Adrián se va del piso de Lucas y no le vuelve hablar",
+    "Adrián se va a casa de los papis",
+    "Jose se queda según Lucas y Laura y Adrián pero no queremos",
+    "Laura y Lucas escalan en la Montaña",
+    "Irene Laura y Adrián hacen el camino De Santiago (ni de coña att Paula)",
+    "Aparece Isaura viva o muerta yo digo Paula q no aparece",
+    "Joan Pradells muere",
+    "Juan Carlos I muere",
+    "Aitana y Metrika sacan canción",
+    "Aitana se retira de la música",
+    "Aitana y Plex lo dejan",
+    "Jose tiene novio (pero el novio lo deja) (Laura)",
+    "Jose tiene novio pero es feo (Laura)",
+    "Jose veterinaria tiene novia",
+    "Carla y Gonzalo tienen una pelea física",
+    "Alguien se vuelve a caer en la Roma",
+    "Conseguimos ir a la Carballeira",
+    "Lucas y Laura siguen en escalada",
+    "Lucas queda con el doctorado de escalada",
+    "Paula viene un día a escalada",
+    "Lucas se lesiona del hombro y no puede venir a escalada",
+    "Mi hermana y el novio lo dejan",
+    "Hay un intento de asesinato de Trump",
+    "Adrián e Irene se acuerdan de mi cumple (Laura)",
+    "Lucas se hace otro tatuaje",
+    "Laura se hace otro tatuaje",
+    "Paula se vuelve a hacer los segundos pendientes",
+    "Paula pierde el móvil o las llaves",
+    "Adrián pasa limpio de curso",
+    "Lucas llora en la graduación",
+    "Antía (la tiesa) lo deja con el novio porque le ha sido infiel en el Erasmus"
+];
+
+let indice = 0;
+let aciertos = 0;
+
+// Cuenta atrás
+function actualizarCuentaAtras() {
+    const ahora = new Date();
+    const destino = new Date("2026-12-01T00:00:00");
+    const diferencia = destino - ahora;
+
+    if (diferencia <= 0) {
+        document.getElementById("cuentaAtras").textContent = "¡Ha llegado el 1 de diciembre de 2026!";
+        return;
+    }
+
+    const dias = Math.floor(diferencia / (1000 * 60 * 60 * 24));
+    const horas = Math.floor((diferencia / (1000 * 60 * 60)) % 24);
+    const minutos = Math.floor((diferencia / (1000 * 60)) % 60);
+    const segundos = Math.floor((diferencia / 1000) % 60);
+
+    document.getElementById("cuentaAtras").textContent =
+        dias + "d " + horas + "h " + minutos + "m " + segundos + "s";
+}
+
+setInterval(actualizarCuentaAtras, 1000);
+actualizarCuentaAtras();
+
+// Funciones de la app
+function mostrar(p) {
+    document.querySelectorAll(".pantalla").forEach(d => d.style.display = "none");
+    document.getElementById(p).style.display = "block";
+}
+
+function entrar() {
+    if (document.getElementById("password").value === CLAVE) {
+        mostrar("registro");
+    } else {
+        alert("Contraseña incorrecta");
+    }
+}
+
+function agregar() {
+    let n = document.getElementById("nombre").value;
+    let p = document.getElementById("prediccion").value;
+    if (!n) return;
+    participantes.push({nombre:n, prediccion:p});
+    document.getElementById("lista").textContent =
+        participantes.map(x => x.nombre).join(", ");
+    document.getElementById("nombre").value = "";
+    document.getElementById("prediccion").value = "";
+}
+
+function empezar() {
+    predicciones.sort(() => Math.random() - 0.5);
+    mostrar("juego");
+    indice = 0;
+    aciertos = 0;
+    mostrarPrediccion();
+}
+
+function mostrarPrediccion() {
+    if (indice >= predicciones.length) {
+        document.getElementById("resultado").textContent =
+            "Has acertado " + aciertos + " de " + predicciones.length;
+        mostrar("final");
+        return;
+    }
+    typeWriter(predicciones[indice], 0);
+}
+
+function typeWriter(text, i) {
+    if (i < text.length) {
+        document.getElementById("texto").textContent += text.charAt(i);
+        setTimeout(() => typeWriter(text, i + 1), 50);
+    }
+}
+
+function acertada() {
+    aciertos++;
+    siguientePrediccion();
+}
+
+function fallada() {
+    siguientePrediccion();
+}
+
+function siguientePrediccion() {
+    indice++;
+    document.getElementById("texto").textContent = "";
+    mostrarPrediccion();
+}
+</script>
+</body>
+</html>
